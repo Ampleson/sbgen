@@ -1,74 +1,110 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stat Block Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: black;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 40px; /* Doubled the font size */
+            background-color: #2b2b2b;
+            color: #e0e0e0;
+            font-family: 'Cinzel', serif;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-        table { 
-            border-collapse: collapse; 
-            margin: 20px auto; 
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #3c3c3c;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            border: 2px solid #6a4f4b;
         }
-        td, th { 
-            width: 60px; 
-            height: 60px; 
-            text-align: center; 
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 30px;
+            color: #d4af37;
         }
-        input { 
-            width: 100%; 
-            height: 100%; 
-            text-align: center; 
-            border: none; 
-            font-size: 40px; /* Doubled font size */
-            background-color: #333; /* Darker input cells */
-            color: white;
+
+        table {
+            border-collapse: collapse;
+            margin: 0 auto 20px;
+            border: 2px solid #6a4f4b;
         }
-        button { 
-            display: block; 
-            margin: 10px auto; 
-            padding: 10px; 
-            font-size: 40px; /* Doubled font size */
-            background-color: black; 
-            color: white; 
-            border: 2px solid white; /* Button border visible */
+
+        td, th, input, .row-sum, .col-sum, .total-sum {
+            width: 80px;
+            height: 80px;
+            text-align: center;
+            padding: 0;
+            border: 1px solid #6a4f4b;
+            font-size: 20px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            font-family: 'Cinzel', serif;
         }
+
+        input {
+            background-color: #4b4b4b;
+            color: #e0e0e0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .row-sum, .col-sum {
+            color: #2b2b2b;
+            background-color: #a0a0a0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .total-sum {
+            color: #2b2b2b;
+            background-color: #c0c0c0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            display: inline-block;
+            margin: 20px 10px;
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #d4af37;
+            color: #2b2b2b;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            font-family: 'Cinzel', serif;
+        }
+
         button:hover {
-            background-color: #444;
-        }
-        .total-sum { 
-            font-size: 40px; /* Doubled font size */
-            color: white; 
-            background-color: lightgray; /* Light gray for total sum */
-            text-align: center; 
-            padding: 10px; 
-            margin-top: 10px; 
-        }
-        .row-sum, .col-sum { 
-            color: lightyellow; /* Light yellow for row/col totals */
-            background-color: darkgray; /* Dark gray for other totals */
+            background-color: #b89e30;
         }
     </style>
 </head>
 <body>
-    <h2 style="text-align:center;">Stat Block Generator</h2>
-    <table>
-        <tbody id="grid"></tbody>
-    </table>
-    <button onclick="generateGrid()">Generate</button>
+    <div class="container">
+        <h2>Stat Block Generator</h2>
+        <table>
+            <tbody id="grid"></tbody>
+        </table>
+        <button onclick="generateGrid()">Generate</button>
+        <button onclick="resetGrid()">Reset</button>
+    </div>
     <script>
         const grid = document.getElementById("grid");
         let inputs = [];
         let rowSumCells = [];
         let colSumCells = [];
+        let dragged;
 
-        // Create 3x3 grid with inputs
         for (let i = 0; i < 3; i++) {
             let row = document.createElement("tr");
             inputs[i] = [];
@@ -78,6 +114,10 @@
                 input.type = "number";
                 input.value = "0";
                 input.oninput = calculateSums;
+                input.draggable = true;
+                input.ondragstart = handleDragStart;
+                input.ondragover = handleDragOver;
+                input.ondrop = handleDrop;
                 inputs[i][j] = input;
                 cell.appendChild(input);
                 row.appendChild(cell);
@@ -90,7 +130,6 @@
             grid.appendChild(row);
         }
 
-        // Create last row for column sums and total sum
         let colSumRow = document.createElement("tr");
         for (let j = 0; j < 3; j++) {
             let colSumCell = document.createElement("td");
@@ -105,7 +144,24 @@
         colSumRow.appendChild(totalSumCell);
         grid.appendChild(colSumRow);
 
-        // Function to calculate sums
+        function handleDragStart(e) {
+            dragged = e.target;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            if (e.target.tagName === 'INPUT') {
+                let temp = dragged.value;
+                dragged.value = e.target.value;
+                e.target.value = temp;
+                calculateSums();
+            }
+        }
+
         function calculateSums() {
             let colSums = [0, 0, 0];
             let totalSum = 0;
@@ -122,16 +178,22 @@
             for (let j = 0; j < 3; j++) {
                 colSumCells[j].textContent = colSums[j];
             }
-            // Update total sum in the last cell of the grid
-            let totalCell = grid.querySelector("tr:last-child td.total-sum");
-            totalCell.textContent = totalSum;
+            totalSumCell.textContent = totalSum;
         }
 
-        // Function to generate random numbers for the grid
         function generateGrid() {
             for (let i = 0; i < 3; i++) {
                 for (let j = 0; j < 3; j++) {
                     inputs[i][j].value = Math.floor(Math.random() * 5) + 2;
+                }
+            }
+            calculateSums();
+        }
+
+        function resetGrid() {
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    inputs[i][j].value = "0";
                 }
             }
             calculateSums();
