@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stat Block Generator</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 40px; /* Doubled the font size */
+        }
+        table { 
+            border-collapse: collapse; 
+            margin: 20px auto; 
+        }
+        td, th { 
+            width: 60px; 
+            height: 60px; 
+            text-align: center; 
+        }
+        input { 
+            width: 100%; 
+            height: 100%; 
+            text-align: center; 
+            border: none; 
+            font-size: 40px; /* Doubled font size */
+            background-color: #333; /* Darker input cells */
+            color: white;
+        }
+        button { 
+            display: block; 
+            margin: 10px auto; 
+            padding: 10px; 
+            font-size: 40px; /* Doubled font size */
+            background-color: black; 
+            color: white; 
+            border: 2px solid white; /* Button border visible */
+        }
+        button:hover {
+            background-color: #444;
+        }
+        .total-sum { 
+            font-size: 40px; /* Doubled font size */
+            color: white; 
+            background-color: lightgray; /* Light gray for total sum */
+            text-align: center; 
+            padding: 10px; 
+            margin-top: 10px; 
+        }
+        .row-sum, .col-sum { 
+            color: lightyellow; /* Light yellow for row/col totals */
+            background-color: darkgray; /* Dark gray for other totals */
+        }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">Stat Block Generator</h2>
+    <table>
+        <tbody id="grid"></tbody>
+    </table>
+    <button onclick="generateGrid()">Generate</button>
+    <script>
+        const grid = document.getElementById("grid");
+        let inputs = [];
+        let rowSumCells = [];
+        let colSumCells = [];
+
+        // Create 3x3 grid with inputs
+        for (let i = 0; i < 3; i++) {
+            let row = document.createElement("tr");
+            inputs[i] = [];
+            for (let j = 0; j < 3; j++) {
+                let cell = document.createElement("td");
+                let input = document.createElement("input");
+                input.type = "number";
+                input.value = "0";
+                input.oninput = calculateSums;
+                inputs[i][j] = input;
+                cell.appendChild(input);
+                row.appendChild(cell);
+            }
+            let rowSumCell = document.createElement("td");
+            rowSumCell.className = "row-sum";
+            rowSumCell.textContent = "0";
+            row.appendChild(rowSumCell);
+            rowSumCells.push(rowSumCell);
+            grid.appendChild(row);
+        }
+
+        // Create last row for column sums and total sum
+        let colSumRow = document.createElement("tr");
+        for (let j = 0; j < 3; j++) {
+            let colSumCell = document.createElement("td");
+            colSumCell.className = "col-sum";
+            colSumCell.textContent = "0";
+            colSumCells.push(colSumCell);
+            colSumRow.appendChild(colSumCell);
+        }
+        let totalSumCell = document.createElement("td");
+        totalSumCell.className = "total-sum";
+        totalSumCell.textContent = "0";
+        colSumRow.appendChild(totalSumCell);
+        grid.appendChild(colSumRow);
+
+        // Function to calculate sums
+        function calculateSums() {
+            let colSums = [0, 0, 0];
+            let totalSum = 0;
+            for (let i = 0; i < 3; i++) {
+                let rowSum = 0;
+                for (let j = 0; j < 3; j++) {
+                    let val = parseInt(inputs[i][j].value) || 0;
+                    rowSum += val;
+                    colSums[j] += val;
+                    totalSum += val;
+                }
+                rowSumCells[i].textContent = rowSum;
+            }
+            for (let j = 0; j < 3; j++) {
+                colSumCells[j].textContent = colSums[j];
+            }
+            // Update total sum in the last cell of the grid
+            let totalCell = grid.querySelector("tr:last-child td.total-sum");
+            totalCell.textContent = totalSum;
+        }
+
+        // Function to generate random numbers for the grid
+        function generateGrid() {
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    inputs[i][j].value = Math.floor(Math.random() * 5) + 2;
+                }
+            }
+            calculateSums();
+        }
+    </script>
+</body>
+</html>
